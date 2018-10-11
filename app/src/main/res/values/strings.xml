@@ -24,4 +24,7 @@
 
 <resources>
     <string name="app_name">Simple Shopping List</string>
+
+    <string name="shoppingTab">Shopping</string>
+    <string name="historyTab">History</string>
 </resources>
