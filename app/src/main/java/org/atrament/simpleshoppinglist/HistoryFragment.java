@@ -27,9 +27,16 @@ package org.atrament.simpleshoppinglist;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import java.util.stream.Collectors;
+
+import static android.content.ContentValues.TAG;
 
 
 /**
@@ -37,9 +44,13 @@ import android.view.ViewGroup;
  */
 public class HistoryFragment extends Fragment {
 
+    private Repository<Item> items;
+
 
     public HistoryFragment() {
         // Required empty public constructor
+        Log.d(TAG, "HistoryFragment: Vytvořen");
+
     }
 
 
@@ -47,7 +58,13 @@ public class HistoryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_history, container, false);
+        View view = inflater.inflate(R.layout.fragment_history, container, false);
+        MainActivity activity = (MainActivity) getActivity();
+        items = activity.getItems();
+        ListView listView = view.findViewById(R.id.historyList);
+        ArrayAdapter<Item> itemsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_multiple_choice, items.getItems().stream().filter(e -> e.isArchived()).collect(Collectors.toList()));
+        listView.setAdapter(itemsAdapter);
+        return view;
     }
 
 }

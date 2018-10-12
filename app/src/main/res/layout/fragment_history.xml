@@ -28,10 +28,12 @@
     android:layout_height="match_parent"
     tools:context=".HistoryFragment">
 
-    <TextView
+    <ListView
+        android:id="@+id/historyList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="History tab" />
+        android:layout_height="match_parent">
+
+    </ListView>
 
 
 </FrameLayout>

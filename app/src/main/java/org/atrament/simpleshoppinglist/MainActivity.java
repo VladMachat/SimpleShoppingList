@@ -34,10 +34,13 @@ import android.support.v7.widget.Toolbar;
 
 public class MainActivity extends AppCompatActivity {
 
+    private Repository<Item> items = new FakeItemRepository();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -68,5 +71,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    public Repository<Item> getItems() {
+        return items;
     }
 }
