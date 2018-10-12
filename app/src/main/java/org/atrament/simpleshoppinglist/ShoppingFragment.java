@@ -27,16 +27,14 @@ package org.atrament.simpleshoppinglist;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
-
-import java.util.stream.Collectors;
-
-import static android.content.ContentValues.TAG;
 
 
 /**
@@ -44,25 +42,40 @@ import static android.content.ContentValues.TAG;
  */
 public class ShoppingFragment extends Fragment {
 
-    private Repository<Item> items;
-
-
     public ShoppingFragment() {
-        // Required empty public constructor
-        Log.d(TAG, "ShoppingFragment: Vytvořen");
+
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+
         View view = inflater.inflate(R.layout.fragment_shopping, container, false);
         MainActivity activity = (MainActivity) getActivity();
-        items = activity.getItems();
         ListView listView = view.findViewById(R.id.shoppingList);
-        ArrayAdapter<Item> itemsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_multiple_choice, items.getItems().stream().filter(e -> !e.isArchived()).collect(Collectors.toList()));
-        listView.setAdapter(itemsAdapter);
+
+        listView.setAdapter((ArrayAdapter) activity.getShoppingAdapter());
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
+        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
+            String item = activity.getItems().getShoppingList().get(position);
+            activity.moveItem(item, activity.getItems().getShoppingList(), activity.getItems().getHistoryList());
+            return true;
+        });
+
+        EditText editText = (AutoCompleteTextView) view.findViewById(R.id.textView);
+        ArrayAdapter<String> autoCompleteAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, activity.getItems().getHistoryList());
+        ((AutoCompleteTextView) editText).setAdapter(autoCompleteAdapter);
+        Button addButton = view.findViewById(R.id.addButton);
+        addButton.setOnClickListener(e -> {
+            if (!editText.getText().toString().equals("")) {
+                activity.moveItem(editText.getText().toString(), activity.getItems().getHistoryList(), activity.getItems().getShoppingList());
+                editText.setText("");
+            }
+        });
+
+
         return view;
     }
 

@@ -30,11 +30,21 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
+
+import java.util.Collections;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private Repository<Item> items = new FakeItemRepository();
+    private FakeItemRepository items = new FakeItemRepository();
+    private ArrayAdapter shoppingAdapter;
+    private ArrayAdapter historyAdapter;
+    private ViewPager pager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabs = findViewById(R.id.tabs);
 
 
-        ViewPager pager = findViewById(R.id.pager);
+        pager = findViewById(R.id.pager);
         PagerAdapter pagerAdapter = new PageAdapter(getSupportFragmentManager(), tabs.getTabCount());
         pager.setAdapter(pagerAdapter);
 
@@ -70,10 +80,55 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Collections.sort(items.getShoppingList());
+        Collections.sort(items.getHistoryList());
+
+        historyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, items.getHistoryList());
+        shoppingAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, items.getShoppingList());
+
 
     }
 
-    public Repository<Item> getItems() {
+    public Adapter getHistoryAdapter() {
+        return historyAdapter;
+    }
+
+    public Adapter getShoppingAdapter() {
+        return shoppingAdapter;
+    }
+
+    public FakeItemRepository getItems() {
         return items;
     }
+
+
+    public void moveItem(String item, List<String> from, List<String> to) {
+        if (!to.contains(item)) {
+            to.add(item);
+        }
+        if (from.contains(item)) {
+            from.remove(item);
+        }
+
+        Collections.sort(to);
+        historyAdapter.notifyDataSetChanged();
+        shoppingAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        switch (pager.getCurrentItem()) {
+            case 0:
+                inflater.inflate(R.menu.shopping, menu);
+                break;
+            case 1:
+                inflater.inflate(R.menu.history, menu);
+                break;
+        }
+
+
+        return true;
+    }
+    
 }

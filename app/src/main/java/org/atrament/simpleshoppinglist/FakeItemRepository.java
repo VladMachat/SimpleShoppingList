@@ -27,42 +27,26 @@ package org.atrament.simpleshoppinglist;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FakeItemRepository implements Repository<Item> {
+public class FakeItemRepository {
 
-    private List<Item> items;
+    private List<String> shoppingList, historyList;
 
     public FakeItemRepository() {
-        items = new ArrayList<>();
-        items.add(new Item("Pivo", false));
-        items.add(new Item("Chleba", false));
-        items.add(new Item("Rohlíky", true));
-        items.add(new Item("Mléko", true));
+        shoppingList = new ArrayList<>();
+        historyList = new ArrayList<>();
+        shoppingList.add("Pivo");
+        shoppingList.add("Chleba");
+        historyList.add("Rohlíky");
+        historyList.add("Mléko");
+
 
     }
 
-    @Override
-    public void saveItem(Item item) {
-        if (!items.contains(item)) {
-            items.add(item);
-        }
-
+    public List<String> getShoppingList() {
+        return shoppingList;
     }
 
-    @Override
-    public void removeItem(Item item) {
-        if (!items.contains(item)) {
-            items.remove(item);
-        }
-
-    }
-
-    @Override
-    public List<Item> getItems() {
-        return items;
-    }
-
-    @Override
-    public int getSize() {
-        return items.size();
+    public List<String> getHistoryList() {
+        return historyList;
     }
 }
