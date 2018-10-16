@@ -24,29 +24,8 @@
 
 package org.atrament.simpleshoppinglist;
 
-import java.util.ArrayList;
-import java.util.List;
 
-public class FakeItemRepository {
+public interface DataObserver {
 
-    private List<String> shoppingList, historyList;
-
-    public FakeItemRepository() {
-        shoppingList = new ArrayList<>();
-        historyList = new ArrayList<>();
-        shoppingList.add("Pivo");
-        shoppingList.add("Chleba");
-        historyList.add("Rohlíky");
-        historyList.add("Mléko");
-
-
-    }
-
-    public List<String> getShoppingList() {
-        return shoppingList;
-    }
-
-    public List<String> getHistoryList() {
-        return historyList;
-    }
+    void onDataChanged();
 }

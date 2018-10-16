@@ -24,33 +24,29 @@
 
 package org.atrament.simpleshoppinglist;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
-public class PageAdapter extends FragmentStatePagerAdapter {
+public class DbHelper extends SQLiteOpenHelper {
 
-    private int numOfTabs;
+    private static final String DB_NAME = "shoppinglist";
+    private static final int DB_VERSION = 1;
 
-    public PageAdapter(FragmentManager fm, int numOfTabs) {
-        super(fm);
-        this.numOfTabs = numOfTabs;
+    public DbHelper(Context context) {
+        super(context, DB_NAME, null, DB_VERSION);
     }
 
     @Override
-    public Fragment getItem(int position) {
-        switch (position) {
-            case 0:
-                return new ShoppingFragment();
-            case 1:
-                return new HistoryFragment();
-        }
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL("drop table if exists items");
+        db.execSQL("create table if not exists items ( _id integer primary key autoincrement, name text unique, archived integer);");
 
-        return null;
     }
 
     @Override
-    public int getCount() {
-        return numOfTabs;
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
     }
+
 }

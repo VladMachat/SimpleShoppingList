@@ -22,30 +22,48 @@
  * SOFTWARE.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package org.atrament.simpleshoppinglist;
 
-buildscript {
-    
-    repositories {
-        google()
-        jcenter()
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Pager extends FragmentStatePagerAdapter {
+
+    private final int numOfTabs;
+    private final List<DataObserver> pages;
+
+    public Pager(FragmentManager fm, int numOfTabs) {
+        super(fm);
+        this.numOfTabs = numOfTabs;
+        pages = new ArrayList<>();
+        pages.add(new ShoppingFragment());
+        pages.add(new HistoryFragment());
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
-        
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    @Override
+    public Fragment getItem(int position) {
+        switch (position) {
+            case 0:
+                return (Fragment) pages.get(0);
+            case 1:
+                return (Fragment) pages.get(1);
+        }
+
+        return null;
     }
-}
 
-allprojects {
-    repositories {
-        google()
-        jcenter()
+    @Override
+    public int getCount() {
+        return numOfTabs;
     }
-}
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+    public void updatePages() {
+        for (DataObserver u : pages) {
+            u.onDataChanged();
+        }
+    }
 }

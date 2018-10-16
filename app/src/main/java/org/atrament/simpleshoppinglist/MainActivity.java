@@ -24,33 +24,35 @@
 
 package org.atrament.simpleshoppinglist;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.widget.Adapter;
-import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
+import android.widget.SimpleCursorAdapter;
 
-import java.util.Collections;
-import java.util.List;
+import com.facebook.stetho.Stetho;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private FakeItemRepository items = new FakeItemRepository();
-    private ArrayAdapter shoppingAdapter;
-    private ArrayAdapter historyAdapter;
-    private ViewPager pager;
+
+    private DbHelper dbHelper;
+    private Pager pagerAdapter;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Stetho.initializeWithDefaults(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        dbHelper = new DbHelper(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -58,15 +60,15 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabs = findViewById(R.id.tabs);
 
 
-        pager = findViewById(R.id.pager);
-        PagerAdapter pagerAdapter = new PageAdapter(getSupportFragmentManager(), tabs.getTabCount());
-        pager.setAdapter(pagerAdapter);
+        ViewPager pagerView = findViewById(R.id.pager);
+        pagerAdapter = new Pager(getSupportFragmentManager(), tabs.getTabCount());
+        pagerView.setAdapter(pagerAdapter);
 
-        pager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabs));
+        pagerView.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabs));
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                pager.setCurrentItem(tab.getPosition());
+                pagerView.setCurrentItem(tab.getPosition());
             }
 
             @Override
@@ -80,55 +82,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Collections.sort(items.getShoppingList());
-        Collections.sort(items.getHistoryList());
-
-        historyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, items.getHistoryList());
-        shoppingAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, items.getShoppingList());
-
-
-    }
-
-    public Adapter getHistoryAdapter() {
-        return historyAdapter;
-    }
-
-    public Adapter getShoppingAdapter() {
-        return shoppingAdapter;
-    }
-
-    public FakeItemRepository getItems() {
-        return items;
-    }
-
-
-    public void moveItem(String item, List<String> from, List<String> to) {
-        if (!to.contains(item)) {
-            to.add(item);
-        }
-        if (from.contains(item)) {
-            from.remove(item);
-        }
-
-        Collections.sort(to);
-        historyAdapter.notifyDataSetChanged();
-        shoppingAdapter.notifyDataSetChanged();
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        switch (pager.getCurrentItem()) {
-            case 0:
-                inflater.inflate(R.menu.shopping, menu);
-                break;
-            case 1:
-                inflater.inflate(R.menu.history, menu);
-                break;
-        }
+    protected void onDestroy() {
+        super.onDestroy();
 
 
-        return true;
     }
-    
+
+    public void storeValues(ContentValues values) {
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            int result = (int) db.insertWithOnConflict("items", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+            if (result == -1) {
+                db.update("items", values, "name=?", new String[]{values.getAsString("name")});
+            }
+        }
+        pagerAdapter.updatePages();
+    }
+
+    public SimpleCursorAdapter getCursor(int archived) {
+        SimpleCursorAdapter result;
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.query("items",
+                new String[]{"_id", "name", "archived"},
+                "archived=?",
+                new String[]{Integer.toString(archived)}, null, null, "name ASC");
+        result = new SimpleCursorAdapter(this,
+                android.R.layout.simple_list_item_1,
+                cursor, new String[]{"name"},
+                new int[]{android.R.id.text1},
+                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        return result;
+    }
 }

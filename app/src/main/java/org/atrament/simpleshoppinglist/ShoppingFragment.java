@@ -25,13 +25,14 @@
 package org.atrament.simpleshoppinglist;
 
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -40,7 +41,10 @@ import android.widget.ListView;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ShoppingFragment extends Fragment {
+public class ShoppingFragment extends Fragment implements DataObserver {
+
+    private ListView shoppingList;
+    private MainActivity activity;
 
     public ShoppingFragment() {
 
@@ -50,33 +54,54 @@ public class ShoppingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_shopping, container, false);
-        MainActivity activity = (MainActivity) getActivity();
-        ListView listView = view.findViewById(R.id.shoppingList);
+        activity = (MainActivity) getActivity();
+        shoppingList = view.findViewById(R.id.shoppingList);
+        onDataChanged();
 
-        listView.setAdapter((ArrayAdapter) activity.getShoppingAdapter());
-        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        EditText newItemText = view.findViewById(R.id.textView);
+        Button addButton = view.findViewById(R.id.addButton);
 
-        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
-            String item = activity.getItems().getShoppingList().get(position);
-            activity.moveItem(item, activity.getItems().getShoppingList(), activity.getItems().getHistoryList());
-            return true;
+        addButton.setOnClickListener(e -> {
+            ContentValues values = new ContentValues();
+            values.put("name", newItemText.getText().toString());
+            values.put("archived", 0);
+            activity.storeValues(values);
+            newItemText.setText("");
+
         });
 
-        EditText editText = (AutoCompleteTextView) view.findViewById(R.id.textView);
-        ArrayAdapter<String> autoCompleteAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, activity.getItems().getHistoryList());
-        ((AutoCompleteTextView) editText).setAdapter(autoCompleteAdapter);
-        Button addButton = view.findViewById(R.id.addButton);
-        addButton.setOnClickListener(e -> {
-            if (!editText.getText().toString().equals("")) {
-                activity.moveItem(editText.getText().toString(), activity.getItems().getHistoryList(), activity.getItems().getShoppingList());
-                editText.setText("");
-            }
+        shoppingList.setOnItemLongClickListener((parent, view1, position, id) -> {
+            SQLiteCursor cursor = (SQLiteCursor) shoppingList.getItemAtPosition(position);
+            int columnIndex = cursor.getColumnIndex("name");
+            String item = cursor.getString(columnIndex);
+            ContentValues values = new ContentValues();
+            values.put("name", item);
+            values.put("archived", 1);
+            activity.storeValues(values);
+            return true;
         });
 
 
         return view;
+
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d("Shopping fragment", "started");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d("Shopping fragment", "onResume: resumed");
+    }
+
+    @Override
+    public void onDataChanged() {
+        shoppingList.setAdapter(activity.getCursor(0));
+
+    }
 }

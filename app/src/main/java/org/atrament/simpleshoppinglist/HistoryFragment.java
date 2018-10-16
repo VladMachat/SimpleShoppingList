@@ -25,20 +25,24 @@
 package org.atrament.simpleshoppinglist;
 
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HistoryFragment extends Fragment {
+public class HistoryFragment extends Fragment implements DataObserver {
 
+
+    private ListView historyList;
+    private MainActivity activity;
 
     public HistoryFragment() {
     }
@@ -48,18 +52,25 @@ public class HistoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_history, container, false);
-        MainActivity activity = (MainActivity) getActivity();
-        ListView listView = view.findViewById(R.id.historyList);
-        listView.setAdapter((ArrayAdapter) activity.getHistoryAdapter());
-        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
-            String item = activity.getItems().getHistoryList().get(position);
-            activity.moveItem(item, activity.getItems().getHistoryList(), activity.getItems().getShoppingList());
+        activity = (MainActivity) getActivity();
+        historyList = view.findViewById(R.id.historyList);
+        onDataChanged();
+        historyList.setOnItemLongClickListener((parent, view1, position, id) -> {
+            SQLiteCursor cursor = (SQLiteCursor) historyList.getItemAtPosition(position);
+            int columnIndex = cursor.getColumnIndex("name");
+            String item = cursor.getString(columnIndex);
+            ContentValues values = new ContentValues();
+            values.put("name", item);
+            values.put("archived", 0);
+            activity.storeValues(values);
             return true;
         });
-
-
         return view;
     }
 
+
+    @Override
+    public void onDataChanged() {
+        historyList.setAdapter(activity.getCursor(1));
+    }
 }
