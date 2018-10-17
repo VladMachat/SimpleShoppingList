@@ -28,6 +28,7 @@ package org.atrament.simpleshoppinglist;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -46,14 +47,14 @@ import java.util.List;
 public class HistoryFragment extends Fragment implements DataObserver {
 
 
-    private ListView historyList;
+    private ListView listView;
     private MainActivity activity;
 
     public HistoryFragment() {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_history, container, false);
@@ -63,15 +64,15 @@ public class HistoryFragment extends Fragment implements DataObserver {
         selectedToShoppingButton.setEnabled(false);
         selectedToShoppingButton.setOnClickListener(v -> {
             selectedToShoppingButton.setEnabled(false);
-            SparseBooleanArray sba = historyList.getCheckedItemPositions();
+            SparseBooleanArray sba = listView.getCheckedItemPositions();
             List<ContentValues> selected = new ArrayList<>();
-            for (int i = 0; i < historyList.getCount(); i++) {
+            for (int i = 0; i < listView.getCount(); i++) {
                 if (sba.get(i)) {
                     ContentValues values = new ContentValues();
                     values.put("name", getNameFromCursorAt(i));
                     values.put("archived", 0);
                     selected.add(values);
-                    historyList.setItemChecked(i, false);
+                    listView.setItemChecked(i, false);
                 }
             }
             activity.storeValues(selected);
@@ -79,27 +80,27 @@ public class HistoryFragment extends Fragment implements DataObserver {
 
         });
 
-        historyList = view.findViewById(R.id.historyList);
+        listView = view.findViewById(R.id.historyList);
         onDataChanged();
-        historyList.setOnItemLongClickListener((parent, view1, position, id) -> {
+        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
             ContentValues values = new ContentValues();
             values.put("name", getNameFromCursorAt(position));
             values.put("archived", 0);
             activity.storeValues(values);
             return true;
         });
-        historyList.setOnItemClickListener((parent, view12, position, id) -> selectedToShoppingButton.setEnabled((historyList.getCheckedItemCount() > 0)));
+        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToShoppingButton.setEnabled((listView.getCheckedItemCount() > 0)));
         return view;
     }
 
 
     @Override
     public void onDataChanged() {
-        historyList.setAdapter(activity.getCursor(1));
+        listView.setAdapter(activity.getCursor(1));
     }
 
     private String getNameFromCursorAt(int position) {
-        SQLiteCursor cursor = (SQLiteCursor) historyList.getItemAtPosition(position);
+        SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
         int columnIndex = cursor.getColumnIndex("name");
         return cursor.getString(columnIndex);
     }

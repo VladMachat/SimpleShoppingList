@@ -28,6 +28,7 @@ package org.atrament.simpleshoppinglist;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -47,7 +48,7 @@ import java.util.List;
  */
 public class ShoppingFragment extends Fragment implements DataObserver {
 
-    private ListView shoppingList;
+    private ListView listView;
     private MainActivity activity;
 
     public ShoppingFragment() {
@@ -56,24 +57,24 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_shopping, container, false);
         activity = (MainActivity) getActivity();
-        shoppingList = view.findViewById(R.id.shoppingList);
+        listView = view.findViewById(R.id.shoppingList);
         onDataChanged();
         Button selectedToHistortyButton = view.findViewById(R.id.selectedToHistoryButton);
         selectedToHistortyButton.setOnClickListener(v -> {
             selectedToHistortyButton.setEnabled(false);
-            SparseBooleanArray sba = shoppingList.getCheckedItemPositions();
+            SparseBooleanArray sba = listView.getCheckedItemPositions();
             List<ContentValues> selected = new ArrayList<>();
-            for (int i = 0; i < shoppingList.getCount(); i++) {
+            for (int i = 0; i < listView.getCount(); i++) {
                 if (sba.get(i)) {
                     ContentValues values = new ContentValues();
                     values.put("name", getNameFromCursorAt(i));
                     values.put("archived", 1);
                     selected.add(values);
-                    shoppingList.setItemChecked(i, false);
+                    listView.setItemChecked(i, false);
                 }
             }
             activity.storeValues(selected);
@@ -95,8 +96,8 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
         });
 
-        shoppingList.setOnItemLongClickListener((parent, view1, position, id) -> {
-            SQLiteCursor cursor = (SQLiteCursor) shoppingList.getItemAtPosition(position);
+        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
+            SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
             int columnIndex = cursor.getColumnIndex("name");
             String item = cursor.getString(columnIndex);
             ContentValues values = new ContentValues();
@@ -105,7 +106,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
             activity.storeValues(values);
             return true;
         });
-        shoppingList.setOnItemClickListener((parent, view12, position, id) -> selectedToHistortyButton.setEnabled((shoppingList.getCheckedItemCount() > 0)));
+        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToHistortyButton.setEnabled((listView.getCheckedItemCount() > 0)));
 
         return view;
 
@@ -125,12 +126,12 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
     @Override
     public void onDataChanged() {
-        shoppingList.setAdapter(activity.getCursor(0));
+        listView.setAdapter(activity.getCursor(0));
 
     }
 
     private String getNameFromCursorAt(int position) {
-        SQLiteCursor cursor = (SQLiteCursor) shoppingList.getItemAtPosition(position);
+        SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
         int columnIndex = cursor.getColumnIndex("name");
         return cursor.getString(columnIndex);
     }

@@ -25,7 +25,7 @@
 package org.atrament.simpleshoppinglist;
 
 
-public interface DataObserver {
+interface DataObserver {
 
     void onDataChanged();
 }

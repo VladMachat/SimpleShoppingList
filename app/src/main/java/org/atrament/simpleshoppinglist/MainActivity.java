@@ -86,13 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-
-    }
-
     public void storeValues(ContentValues values) {
         try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
             int result = (int) db.insertWithOnConflict("items", null, values, SQLiteDatabase.CONFLICT_IGNORE);

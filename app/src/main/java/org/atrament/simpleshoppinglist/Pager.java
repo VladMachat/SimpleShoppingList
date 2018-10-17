@@ -31,7 +31,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pager extends FragmentStatePagerAdapter {
+class Pager extends FragmentStatePagerAdapter {
 
     private final int numOfTabs;
     private final List<DataObserver> pages;
