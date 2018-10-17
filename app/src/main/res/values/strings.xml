@@ -28,4 +28,8 @@
     <string name="shoppingTab">Shopping</string>
     <string name="historyTab">History</string>
     <string name="buttonLabel">Add</string>
+    <string name="delete_all_items">Delete all items</string>
+    <string name="selected_to_shopping_list">Selected to shopping list</string>
+
+
 </resources>

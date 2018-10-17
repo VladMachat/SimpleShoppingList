@@ -37,6 +37,8 @@ import android.widget.SimpleCursorAdapter;
 
 import com.facebook.stetho.Stetho;
 
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -101,6 +103,25 @@ public class MainActivity extends AppCompatActivity {
         pagerAdapter.updatePages();
     }
 
+    public void storeValues(List<ContentValues> values) {
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            try {
+                db.beginTransaction();
+                for (ContentValues v : values) {
+                    int result = (int) db.insertWithOnConflict("items", null, v, SQLiteDatabase.CONFLICT_IGNORE);
+                    if (result == -1) {
+                        db.update("items", v, "name=?", new String[]{v.getAsString("name")});
+                    }
+                }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+        pagerAdapter.updatePages();
+
+    }
+
     public SimpleCursorAdapter getCursor(int archived) {
         SimpleCursorAdapter result;
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -109,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 "archived=?",
                 new String[]{Integer.toString(archived)}, null, null, "name ASC");
         result = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_1,
+                android.R.layout.simple_list_item_multiple_choice,
                 cursor, new String[]{"name"},
                 new int[]{android.R.id.text1},
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
