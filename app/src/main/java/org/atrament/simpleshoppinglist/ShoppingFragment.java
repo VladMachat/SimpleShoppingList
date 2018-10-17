@@ -30,6 +30,8 @@ import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -64,6 +66,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         listView = view.findViewById(R.id.shoppingList);
         onDataChanged();
         Button selectedToHistortyButton = view.findViewById(R.id.selectedToHistoryButton);
+        selectedToHistortyButton.setEnabled(false);
         selectedToHistortyButton.setOnClickListener(v -> {
             selectedToHistortyButton.setEnabled(false);
             SparseBooleanArray sba = listView.getCheckedItemPositions();
@@ -84,10 +87,27 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
         EditText newItemText = view.findViewById(R.id.textView);
         Button addButton = view.findViewById(R.id.addButton);
+        addButton.setEnabled(false);
+        newItemText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                addButton.setEnabled(count > 2);
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
 
         addButton.setOnClickListener(e -> {
-            //TODO zkontrolovat jestli bylo vůbec něco zadáno aby se nepřidávaly prázdné položky
-            // nejlépe udělat aby se tlačítko add aktivovalo jenom když je něco zadáno
             ContentValues values = new ContentValues();
             values.put("name", newItemText.getText().toString());
             values.put("archived", 0);
