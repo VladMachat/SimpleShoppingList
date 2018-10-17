@@ -30,12 +30,14 @@ import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,8 @@ public class HistoryFragment extends Fragment implements DataObserver {
 
     private ListView listView;
     private MainActivity activity;
+    private Button selectedToShoppingButton;
+    private Button deleteSelectedButton;
 
     public HistoryFragment() {
     }
@@ -60,22 +64,13 @@ public class HistoryFragment extends Fragment implements DataObserver {
         View view = inflater.inflate(R.layout.fragment_history, container, false);
         activity = (MainActivity) getActivity();
 
-        Button selectedToShoppingButton = view.findViewById(R.id.selectedToShoppingButton);
+        selectedToShoppingButton = view.findViewById(R.id.selectedToShoppingButton);
         selectedToShoppingButton.setEnabled(false);
         selectedToShoppingButton.setOnClickListener(v -> {
             selectedToShoppingButton.setEnabled(false);
-            SparseBooleanArray sba = listView.getCheckedItemPositions();
-            List<ContentValues> selected = new ArrayList<>();
-            for (int i = 0; i < listView.getCount(); i++) {
-                if (sba.get(i)) {
-                    ContentValues values = new ContentValues();
-                    values.put("name", getNameFromCursorAt(i));
-                    values.put("archived", 0);
-                    selected.add(values);
-                    listView.setItemChecked(i, false);
-                }
-            }
-            activity.storeValues(selected);
+            deleteSelectedButton.setEnabled(false);
+
+            activity.storeValues(getCheckedValues());
 
 
         });
@@ -89,7 +84,30 @@ public class HistoryFragment extends Fragment implements DataObserver {
             activity.storeValues(values);
             return true;
         });
-        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToShoppingButton.setEnabled((listView.getCheckedItemCount() > 0)));
+
+        deleteSelectedButton = view.findViewById(R.id.deleteSelectedButton);
+        deleteSelectedButton.setEnabled(false);
+        deleteSelectedButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(activity)
+                    .setTitle("Delete items")
+                    .setMessage("Really delete selected items?")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
+                        selectedToShoppingButton.setEnabled(false);
+                        deleteSelectedButton.setEnabled(false);
+                        activity.deleteItems(getCheckedValues());
+                        Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
+
+                    })
+                    .setNegativeButton(android.R.string.no, null).show();
+        });
+
+        listView.setOnItemClickListener((parent, view12, position, id) -> {
+            int selectedCount = listView.getCheckedItemCount();
+            selectedToShoppingButton.setEnabled((selectedCount > 0));
+            deleteSelectedButton.setEnabled((selectedCount > 0));
+
+        });
         return view;
     }
 
@@ -103,5 +121,20 @@ public class HistoryFragment extends Fragment implements DataObserver {
         SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
         int columnIndex = cursor.getColumnIndex("name");
         return cursor.getString(columnIndex);
+    }
+
+    private List<ContentValues> getCheckedValues() {
+        SparseBooleanArray sba = listView.getCheckedItemPositions();
+        List<ContentValues> selected = new ArrayList<>();
+        for (int i = 0; i < listView.getCount(); i++) {
+            if (sba.get(i)) {
+                ContentValues values = new ContentValues();
+                values.put("name", getNameFromCursorAt(i));
+                values.put("archived", 0);
+                selected.add(values);
+                listView.setItemChecked(i, false);
+            }
+        }
+        return selected;
     }
 }

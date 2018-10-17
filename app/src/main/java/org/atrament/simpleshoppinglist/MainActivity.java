@@ -47,8 +47,6 @@ public class MainActivity extends AppCompatActivity {
     private Pager pagerAdapter;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Stetho.initializeWithDefaults(this);
@@ -145,4 +143,20 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
+    public void deleteItems(List<ContentValues> values) {
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            try {
+                db.beginTransaction();
+                for (ContentValues v : values) {
+                    //db.update("items", v, "name=?", new String[]{v.getAsString("name")});
+                    db.delete("items", "name=?", new String[]{v.getAsString("name")});
+                }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+
+        }
+        pagerAdapter.updatePages();
+    }
 }

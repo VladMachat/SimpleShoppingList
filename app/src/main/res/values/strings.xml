@@ -31,6 +31,8 @@
     <string name="delete_all_items">Delete all items</string>
     <string name="selected_to_shopping_list">Selected to shopping list</string>
     <string name="selected_to_history_list">Selected to history list</string>
+    <string name="delete_selected">Delete selected</string>
+    <string name="delete_all">Delete all</string>
 
 
 </resources>
