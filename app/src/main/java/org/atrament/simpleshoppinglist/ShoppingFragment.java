@@ -30,12 +30,16 @@ import android.database.sqlite.SQLiteCursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -58,11 +62,31 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         activity = (MainActivity) getActivity();
         shoppingList = view.findViewById(R.id.shoppingList);
         onDataChanged();
+        Button selectedToHistortyButton = view.findViewById(R.id.selectedToHistoryButton);
+        selectedToHistortyButton.setOnClickListener(v -> {
+            selectedToHistortyButton.setEnabled(false);
+            SparseBooleanArray sba = shoppingList.getCheckedItemPositions();
+            List<ContentValues> selected = new ArrayList<>();
+            for (int i = 0; i < shoppingList.getCount(); i++) {
+                if (sba.get(i)) {
+                    ContentValues values = new ContentValues();
+                    values.put("name", getNameFromCursorAt(i));
+                    values.put("archived", 1);
+                    selected.add(values);
+                    shoppingList.setItemChecked(i, false);
+                }
+            }
+            activity.storeValues(selected);
+
+
+        });
 
         EditText newItemText = view.findViewById(R.id.textView);
         Button addButton = view.findViewById(R.id.addButton);
 
         addButton.setOnClickListener(e -> {
+            //TODO zkontrolovat jestli bylo vůbec něco zadáno aby se nepřidávaly prázdné položky
+            // nejlépe udělat aby se tlačítko add aktivovalo jenom když je něco zadáno
             ContentValues values = new ContentValues();
             values.put("name", newItemText.getText().toString());
             values.put("archived", 0);
@@ -81,7 +105,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
             activity.storeValues(values);
             return true;
         });
-
+        shoppingList.setOnItemClickListener((parent, view12, position, id) -> selectedToHistortyButton.setEnabled((shoppingList.getCheckedItemCount() > 0)));
 
         return view;
 
@@ -103,5 +127,11 @@ public class ShoppingFragment extends Fragment implements DataObserver {
     public void onDataChanged() {
         shoppingList.setAdapter(activity.getCursor(0));
 
+    }
+
+    private String getNameFromCursorAt(int position) {
+        SQLiteCursor cursor = (SQLiteCursor) shoppingList.getItemAtPosition(position);
+        int columnIndex = cursor.getColumnIndex("name");
+        return cursor.getString(columnIndex);
     }
 }

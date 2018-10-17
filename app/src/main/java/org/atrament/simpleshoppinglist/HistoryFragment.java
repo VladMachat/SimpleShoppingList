@@ -88,10 +88,7 @@ public class HistoryFragment extends Fragment implements DataObserver {
             activity.storeValues(values);
             return true;
         });
-        historyList.setOnItemClickListener((parent, view12, position, id) -> {
-            selectedToShoppingButton.setEnabled((historyList.getCheckedItemCount() > 0));
-
-        });
+        historyList.setOnItemClickListener((parent, view12, position, id) -> selectedToShoppingButton.setEnabled((historyList.getCheckedItemCount() > 0)));
         return view;
     }
 
