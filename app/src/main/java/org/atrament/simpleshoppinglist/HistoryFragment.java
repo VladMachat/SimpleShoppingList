@@ -64,6 +64,7 @@ public class HistoryFragment extends Fragment implements DataObserver {
         View view = inflater.inflate(R.layout.fragment_history, container, false);
         activity = (MainActivity) getActivity();
 
+
         selectedToShoppingButton = view.findViewById(R.id.selectedToShoppingButton);
         selectedToShoppingButton.setEnabled(false);
         selectedToShoppingButton.setOnClickListener(v -> {

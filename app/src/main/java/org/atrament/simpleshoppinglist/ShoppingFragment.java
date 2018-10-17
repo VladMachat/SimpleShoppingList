@@ -68,6 +68,9 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         View view = inflater.inflate(R.layout.fragment_shopping, container, false);
         activity = (MainActivity) getActivity();
         listView = view.findViewById(R.id.shoppingList);
+        listView.setFocusable(true);
+        listView.setFocusableInTouchMode(true);
+        listView.requestFocus();
         onDataChanged();
         Button selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
         selectedToHistoryButton.setEnabled(false);
