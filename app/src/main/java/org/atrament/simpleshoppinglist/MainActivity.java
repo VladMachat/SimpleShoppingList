@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public SimpleCursorAdapter getCursor(int archived) {
+    public SimpleCursorAdapter getCursorAdapter(int archived) {
         SimpleCursorAdapter result;
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query("items",
@@ -129,4 +129,20 @@ public class MainActivity extends AppCompatActivity {
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         return result;
     }
+
+    public SimpleCursorAdapter getHintCursorAdapter() {
+        SimpleCursorAdapter result;
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.query("items",
+                new String[]{"_id", "name"},
+                "archived=?",
+                new String[]{Integer.toString(1)}, null, null, "name ASC");
+        result = new SimpleCursorAdapter(this,
+                android.R.layout.simple_list_item_1,
+                cursor, new String[]{"name"},
+                new int[]{android.R.id.text1},
+                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        return result;
+    }
+
 }

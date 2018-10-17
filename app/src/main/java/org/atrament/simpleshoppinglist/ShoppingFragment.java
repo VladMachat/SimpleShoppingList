@@ -26,7 +26,9 @@ package org.atrament.simpleshoppinglist;
 
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -34,12 +36,14 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,10 +69,10 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         activity = (MainActivity) getActivity();
         listView = view.findViewById(R.id.shoppingList);
         onDataChanged();
-        Button selectedToHistortyButton = view.findViewById(R.id.selectedToHistoryButton);
-        selectedToHistortyButton.setEnabled(false);
-        selectedToHistortyButton.setOnClickListener(v -> {
-            selectedToHistortyButton.setEnabled(false);
+        Button selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
+        selectedToHistoryButton.setEnabled(false);
+        selectedToHistoryButton.setOnClickListener(v -> {
+            selectedToHistoryButton.setEnabled(false);
             SparseBooleanArray sba = listView.getCheckedItemPositions();
             List<ContentValues> selected = new ArrayList<>();
             for (int i = 0; i < listView.getCount(); i++) {
@@ -85,10 +89,29 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
         });
 
-        EditText newItemText = view.findViewById(R.id.textView);
+        AutoCompleteTextView textView = view.findViewById(R.id.textView);
+        SimpleCursorAdapter hintAdapter = activity.getHintCursorAdapter();
+        hintAdapter.setCursorToStringConverter(cursor -> {
+            int col = cursor.getColumnIndex("name");
+            return cursor.getString(col);
+
+        });
+        hintAdapter.setFilterQueryProvider(constraint -> {
+            SQLiteDatabase db = new DbHelper(activity).getReadableDatabase();
+            Cursor cursor = null;
+            if (constraint != null) {
+                cursor = db.rawQuery("SELECT _id, name FROM items WHERE archived = ? AND name like ?", new String[]{"1", constraint.toString() + "_%"});
+
+            }
+
+            return cursor;
+        });
+
+        textView.setAdapter(hintAdapter);
+
         Button addButton = view.findViewById(R.id.addButton);
         addButton.setEnabled(false);
-        newItemText.addTextChangedListener(new TextWatcher() {
+        textView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -106,13 +129,22 @@ public class ShoppingFragment extends Fragment implements DataObserver {
             }
         });
 
+        textView.setOnItemClickListener((parent, view13, position, id) -> addButton.performClick());
+        textView.setOnKeyListener((v, keyCode, event) -> {
+            if (textView.getText().toString().length() >= 2 && keyCode == KeyEvent.KEYCODE_ENTER) {
+                addButton.performClick();
+            }
+            return false;
+        });
+
+
 
         addButton.setOnClickListener(e -> {
             ContentValues values = new ContentValues();
-            values.put("name", newItemText.getText().toString());
+            values.put("name", textView.getText().toString());
             values.put("archived", 0);
             activity.storeValues(values);
-            newItemText.setText("");
+            textView.setText("");
 
         });
 
@@ -126,7 +158,8 @@ public class ShoppingFragment extends Fragment implements DataObserver {
             activity.storeValues(values);
             return true;
         });
-        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToHistortyButton.setEnabled((listView.getCheckedItemCount() > 0)));
+        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToHistoryButton.setEnabled((listView.getCheckedItemCount() > 0)));
+
 
         return view;
 
@@ -146,7 +179,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
     @Override
     public void onDataChanged() {
-        listView.setAdapter(activity.getCursor(0));
+        listView.setAdapter(activity.getCursorAdapter(0));
 
     }
 

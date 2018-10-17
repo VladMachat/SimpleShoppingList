@@ -96,7 +96,7 @@ public class HistoryFragment extends Fragment implements DataObserver {
 
     @Override
     public void onDataChanged() {
-        listView.setAdapter(activity.getCursor(1));
+        listView.setAdapter(activity.getCursorAdapter(1));
     }
 
     private String getNameFromCursorAt(int position) {

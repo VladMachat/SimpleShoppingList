@@ -35,6 +35,7 @@
         android:layout_height="0dp"
         android:maxLines="1"
         android:singleLine="true"
+        android:completionThreshold="1"
         android:textSize="14.0sp"
         app:layout_constraintBottom_toTopOf="@+id/shoppingList"
         app:layout_constraintEnd_toStartOf="@+id/addButton"
