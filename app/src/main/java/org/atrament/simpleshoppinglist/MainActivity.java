@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Stetho.initializeWithDefaults(this);
+        Stetho.initializeWithDefaults(this); //TODO remove Stetho from final version
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         dbHelper = new DbHelper(this);
