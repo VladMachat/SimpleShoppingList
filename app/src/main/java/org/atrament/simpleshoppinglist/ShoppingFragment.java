@@ -56,6 +56,8 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
     private ListView listView;
     private MainActivity activity;
+    private Button selectedToHistoryButton;
+    private AutoCompleteTextView textView;
 
     public ShoppingFragment() {
 
@@ -72,7 +74,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         listView.setFocusableInTouchMode(true);
         listView.requestFocus();
         onDataChanged();
-        Button selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
+        selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
         selectedToHistoryButton.setEnabled(false);
         selectedToHistoryButton.setOnClickListener(v -> {
             selectedToHistoryButton.setEnabled(false);
@@ -92,7 +94,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
         });
 
-        AutoCompleteTextView textView = view.findViewById(R.id.textView);
+        textView = view.findViewById(R.id.textView);
         SimpleCursorAdapter hintAdapter = activity.getHintCursorAdapter();
         hintAdapter.setCursorToStringConverter(cursor -> {
             int col = cursor.getColumnIndex("name");
@@ -122,13 +124,12 @@ public class ShoppingFragment extends Fragment implements DataObserver {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                addButton.setEnabled(count > 2);
 
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-
+                addButton.setEnabled(s.length() >= 2);
             }
         });
 

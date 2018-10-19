@@ -148,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 db.beginTransaction();
                 for (ContentValues v : values) {
-                    //db.update("items", v, "name=?", new String[]{v.getAsString("name")});
                     db.delete("items", "name=?", new String[]{v.getAsString("name")});
                 }
                 db.setTransactionSuccessful();
@@ -156,6 +155,13 @@ public class MainActivity extends AppCompatActivity {
                 db.endTransaction();
             }
 
+        }
+        pagerAdapter.updatePages();
+    }
+
+    public void deleteAllItems() {
+        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+            db.execSQL("delete from " + "items");
         }
         pagerAdapter.updatePages();
     }

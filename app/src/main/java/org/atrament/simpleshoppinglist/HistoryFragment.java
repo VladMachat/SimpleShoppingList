@@ -53,6 +53,7 @@ public class HistoryFragment extends Fragment implements DataObserver {
     private MainActivity activity;
     private Button selectedToShoppingButton;
     private Button deleteSelectedButton;
+    private Button deleteAllButton;
 
     public HistoryFragment() {
     }
@@ -108,6 +109,21 @@ public class HistoryFragment extends Fragment implements DataObserver {
             selectedToShoppingButton.setEnabled((selectedCount > 0));
             deleteSelectedButton.setEnabled((selectedCount > 0));
 
+        });
+        deleteAllButton = view.findViewById(R.id.deleteAllButton);
+        deleteAllButton.setOnClickListener((v) -> {
+            new AlertDialog.Builder(activity)
+                    .setTitle("Delete ALL items")
+                    .setMessage("Really delete ALL items?")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
+                        selectedToShoppingButton.setEnabled(false);
+                        deleteSelectedButton.setEnabled(false);
+                        activity.deleteAllItems();
+                        Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
+
+                    })
+                    .setNegativeButton(android.R.string.no, null).show();
         });
         return view;
     }
