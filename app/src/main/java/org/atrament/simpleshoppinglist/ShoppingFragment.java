@@ -47,12 +47,14 @@ import android.widget.SimpleCursorAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ShoppingFragment extends Fragment implements DataObserver {
+public class ShoppingFragment extends Fragment implements Observer {
 
     private ListView listView;
     private MainActivity activity;
@@ -73,7 +75,7 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         listView.setFocusable(true);
         listView.setFocusableInTouchMode(true);
         listView.requestFocus();
-        onDataChanged();
+        update(null, null);
         selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
         selectedToHistoryButton.setEnabled(false);
         selectedToHistoryButton.setOnClickListener(v -> {
@@ -181,15 +183,16 @@ public class ShoppingFragment extends Fragment implements DataObserver {
         Log.d("Shopping fragment", "onResume: resumed");
     }
 
-    @Override
-    public void onDataChanged() {
-        listView.setAdapter(activity.getCursorAdapter(0));
 
-    }
 
     private String getNameFromCursorAt(int position) {
         SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
         int columnIndex = cursor.getColumnIndex("name");
         return cursor.getString(columnIndex);
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        listView.setAdapter(activity.getCursorAdapter(0));
     }
 }

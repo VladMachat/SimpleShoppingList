@@ -30,11 +30,12 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observer;
 
 class Pager extends FragmentStatePagerAdapter {
 
     private final int numOfTabs;
-    private final List<DataObserver> pages;
+    private final List<Observer> pages;
 
     public Pager(FragmentManager fm, int numOfTabs) {
         super(fm);
@@ -62,8 +63,8 @@ class Pager extends FragmentStatePagerAdapter {
     }
 
     public void updatePages() {
-        for (DataObserver u : pages) {
-            u.onDataChanged();
+        for (Observer u : pages) {
+            u.update(null, null);
         }
     }
 }
