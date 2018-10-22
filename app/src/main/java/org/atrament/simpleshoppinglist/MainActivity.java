@@ -49,10 +49,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Stetho.initializeWithDefaults(this);
+        Stetho.initializeWithDefaults(this); //TODO remove Stetho from final version
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        dbHelper = new DbHelper(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -85,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void storeValues(ContentValues values) {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
             int result = (int) db.insertWithOnConflict("items", null, values, SQLiteDatabase.CONFLICT_IGNORE);
             if (result == -1) {
                 db.update("items", values, "name=?", new String[]{values.getAsString("name")});
@@ -95,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void storeValues(List<ContentValues> values) {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
             try {
                 db.beginTransaction();
                 for (ContentValues v : values) {
@@ -115,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     public SimpleCursorAdapter getCursorAdapter(int archived) {
         SimpleCursorAdapter result;
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        SQLiteDatabase db = getDbHelper().getReadableDatabase();
         Cursor cursor = db.query("items",
                 new String[]{"_id", "name", "archived"},
                 "archived=?",
@@ -130,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
     public SimpleCursorAdapter getHintCursorAdapter() {
         SimpleCursorAdapter result;
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        SQLiteDatabase db = getDbHelper().getReadableDatabase();
         Cursor cursor = db.query("items",
                 new String[]{"_id", "name"},
                 "archived=?",
@@ -144,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteItems(List<ContentValues> values) {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
             try {
                 db.beginTransaction();
                 for (ContentValues v : values) {
@@ -160,9 +159,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteAllItems() {
-        try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
+        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
             db.execSQL("delete from " + "items");
         }
         pagerAdapter.updatePages();
+    }
+
+    public DbHelper getDbHelper() {
+        if (dbHelper == null) {
+            dbHelper = new DbHelper(this);
+            return dbHelper;
+        } else {
+            return dbHelper;
+        }
     }
 }

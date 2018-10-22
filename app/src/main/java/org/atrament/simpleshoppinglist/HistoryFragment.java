@@ -41,12 +41,14 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HistoryFragment extends Fragment implements DataObserver {
+public class HistoryFragment extends Fragment implements Observer {
 
 
     private ListView listView;
@@ -78,7 +80,7 @@ public class HistoryFragment extends Fragment implements DataObserver {
         });
 
         listView = view.findViewById(R.id.historyList);
-        onDataChanged();
+        update(null, null);
         listView.setOnItemLongClickListener((parent, view1, position, id) -> {
             ContentValues values = new ContentValues();
             values.put("name", getNameFromCursorAt(position));
@@ -129,11 +131,6 @@ public class HistoryFragment extends Fragment implements DataObserver {
     }
 
 
-    @Override
-    public void onDataChanged() {
-        listView.setAdapter(activity.getCursorAdapter(1));
-    }
-
     private String getNameFromCursorAt(int position) {
         SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
         int columnIndex = cursor.getColumnIndex("name");
@@ -153,5 +150,10 @@ public class HistoryFragment extends Fragment implements DataObserver {
             }
         }
         return selected;
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        listView.setAdapter(activity.getCursorAdapter(1));
     }
 }
