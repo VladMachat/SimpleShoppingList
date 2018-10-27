@@ -25,12 +25,10 @@
 package org.atrament.simpleshoppinglist;
 
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteCursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -40,93 +38,75 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ShoppingFragment extends Fragment implements Observer {
+public class ShoppingFragment extends Fragment {
 
     private ListView listView;
-    private MainActivity activity;
+    private ItemViewModel model;
     private Button selectedToHistoryButton;
+    private Button addButton;
     private AutoCompleteTextView textView;
 
-    public ShoppingFragment() {
+    private static String TAG = "ShoppingFragment";
 
+    public ShoppingFragment() {
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_shopping, container, false);
-        activity = (MainActivity) getActivity();
+
         listView = view.findViewById(R.id.shoppingList);
+        textView = view.findViewById(R.id.textView);
+        addButton = view.findViewById(R.id.addButton);
+        selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
+
+
         listView.setFocusable(true);
         listView.setFocusableInTouchMode(true);
         listView.requestFocus();
-        update(null, null);
-        selectedToHistoryButton = view.findViewById(R.id.selectedToHistoryButton);
+
         selectedToHistoryButton.setEnabled(false);
         selectedToHistoryButton.setOnClickListener(v -> {
             selectedToHistoryButton.setEnabled(false);
             SparseBooleanArray sba = listView.getCheckedItemPositions();
-            List<ContentValues> selected = new ArrayList<>();
             for (int i = 0; i < listView.getCount(); i++) {
                 if (sba.get(i)) {
-                    ContentValues values = new ContentValues();
-                    values.put("name", getNameFromCursorAt(i));
-                    values.put("archived", 1);
-                    selected.add(values);
+                    Item item = model.getShoppingList().getValue().get(i);
+                    item.setArchived(true);
                     listView.setItemChecked(i, false);
+                    model.update(item);
+
                 }
             }
-            activity.storeValues(selected);
-
 
         });
 
-        textView = view.findViewById(R.id.textView);
-        SimpleCursorAdapter hintAdapter = activity.getHintCursorAdapter();
-        hintAdapter.setCursorToStringConverter(cursor -> {
-            int col = cursor.getColumnIndex("name");
-            return cursor.getString(col);
-
-        });
-        hintAdapter.setFilterQueryProvider(constraint -> {
-            SQLiteDatabase db = new DbHelper(activity).getReadableDatabase();
-            Cursor cursor = null;
-            if (constraint != null) {
-                cursor = db.rawQuery("SELECT _id, name FROM items WHERE archived = ? AND name like ?", new String[]{"1", constraint.toString() + "_%"});
-
-            }
-
-            return cursor;
-        });
-
-        textView.setAdapter(hintAdapter);
-
-        Button addButton = view.findViewById(R.id.addButton);
         addButton.setEnabled(false);
         textView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
             }
 
             @Override
@@ -143,56 +123,95 @@ public class ShoppingFragment extends Fragment implements Observer {
             return false;
         });
 
-
+        textView.setOnItemClickListener((parent, view14, position, id) -> {
+            String selected = parent.getItemAtPosition(position).toString();
+            for (Item item : model.getHistoryList().getValue()) {
+                if (item.getName().equals(selected)) {
+                    item.setArchived(false);
+                    model.update(item);
+                }
+            }
+            textView.setText("");
+        });
 
         addButton.setOnClickListener(e -> {
-            ContentValues values = new ContentValues();
-            values.put("name", textView.getText().toString());
-            values.put("archived", 0);
-            activity.storeValues(values);
-            textView.setText("");
+            List<Item> allItems = model.getAllItems();
 
+            String itemString = textView.getText().toString();
+            List<Item> result = new ArrayList<>();
+            for (Item i : allItems) {
+                if (i.getName().equals(itemString)) {
+                    result.add(i);
+                }
+            }
+            if (result.size() == 0) {
+                model.insert(new Item(itemString, false));
+            }
+            textView.setText("");
         });
 
         listView.setOnItemLongClickListener((parent, view1, position, id) -> {
-            SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
-            int columnIndex = cursor.getColumnIndex("name");
-            String item = cursor.getString(columnIndex);
-            ContentValues values = new ContentValues();
-            values.put("name", item);
-            values.put("archived", 1);
-            activity.storeValues(values);
+            Item item = model.getShoppingList().getValue().get(position);
+            item.setArchived(true);
+            model.update(item);
             return true;
         });
-        listView.setOnItemClickListener((parent, view12, position, id) -> selectedToHistoryButton.setEnabled((listView.getCheckedItemCount() > 0)));
-
-
+        listView.setOnItemClickListener((parent, view12, position, id) -> updateButtons());
         return view;
-
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d("Shopping fragment", "started");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("Shopping fragment", "onResume: resumed");
+        updateButtons();
     }
 
-
-
-    private String getNameFromCursorAt(int position) {
-        SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
-        int columnIndex = cursor.getColumnIndex("name");
-        return cursor.getString(columnIndex);
+    private void updateButtons() {
+        selectedToHistoryButton.setEnabled((listView.getCheckedItemCount() > 0));
     }
 
     @Override
-    public void update(Observable o, Object arg) {
-        listView.setAdapter(activity.getCursorAdapter(0));
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "onActivityCreated: started");
+        model = ViewModelProviders.of(getActivity()).get(ItemViewModel.class);
+        model.getShoppingList().observe(this, items -> {
+            ArrayAdapter<Item> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_multiple_choice, items);
+            listView.setAdapter(adapter);
+            if (savedInstanceState != null) {
+                List<Integer> selected = savedInstanceState.getIntegerArrayList("selected");
+                savedInstanceState.clear();
+                if ((selected != null) && (selected.size() > 0)) {
+                    for (Integer i : selected) {
+                        listView.setItemChecked(i, true);
+                    }
+                }
+            }
+            updateButtons();
+        });
+
+        model.getHistoryList().
+
+                observe(this, items ->
+
+                {
+                    ArrayAdapter<Item> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, items);
+                    textView.setAdapter(adapter);
+                });
+
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < listView.getCount(); i++) {
+            if (listView.isItemChecked(i)) {
+                list.add(i);
+                listView.setItemChecked(i, false);
+            }
+        }
+        outState.putIntegerArrayList("selected", (ArrayList<Integer>) list);
+
     }
 }

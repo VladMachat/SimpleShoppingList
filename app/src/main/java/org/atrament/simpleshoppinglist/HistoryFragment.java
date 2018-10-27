@@ -25,34 +25,32 @@
 package org.atrament.simpleshoppinglist;
 
 
-import android.content.ContentValues;
-import android.database.sqlite.SQLiteCursor;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HistoryFragment extends Fragment implements Observer {
+public class HistoryFragment extends Fragment {
 
+    private ItemViewModel model;
 
     private ListView listView;
-    private MainActivity activity;
     private Button selectedToShoppingButton;
     private Button deleteSelectedButton;
     private Button deleteAllButton;
@@ -65,64 +63,69 @@ public class HistoryFragment extends Fragment implements Observer {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_history, container, false);
-        activity = (MainActivity) getActivity();
 
-
+        listView = view.findViewById(R.id.historyList);
         selectedToShoppingButton = view.findViewById(R.id.selectedToShoppingButton);
+        deleteSelectedButton = view.findViewById(R.id.deleteSelectedButton);
+
         selectedToShoppingButton.setEnabled(false);
         selectedToShoppingButton.setOnClickListener(v -> {
             selectedToShoppingButton.setEnabled(false);
             deleteSelectedButton.setEnabled(false);
+            SparseBooleanArray sba = listView.getCheckedItemPositions();
 
-            activity.storeValues(getCheckedValues());
-
+            for (int i = 0; i < listView.getCount(); i++) {
+                if (sba.get(i)) {
+                    Item item = model.getHistoryList().getValue().get(i);
+                    item.setArchived(false);
+                    model.update(item);
+                }
+            }
 
         });
 
-        listView = view.findViewById(R.id.historyList);
-        update(null, null);
         listView.setOnItemLongClickListener((parent, view1, position, id) -> {
-            ContentValues values = new ContentValues();
-            values.put("name", getNameFromCursorAt(position));
-            values.put("archived", 0);
-            activity.storeValues(values);
+            Item item = model.getHistoryList().getValue().get(position);
+            item.setArchived(false);
+            model.update(item);
             return true;
         });
 
-        deleteSelectedButton = view.findViewById(R.id.deleteSelectedButton);
+
         deleteSelectedButton.setEnabled(false);
         deleteSelectedButton.setOnClickListener(v -> {
-            new AlertDialog.Builder(activity)
-                    .setTitle("Delete items")
-                    .setMessage("Really delete selected items?")
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.delete_dialog_title)
+                    .setMessage(R.string.delete_dialog_message)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
                         selectedToShoppingButton.setEnabled(false);
                         deleteSelectedButton.setEnabled(false);
-                        activity.deleteItems(getCheckedValues());
-                        Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
-
+                        SparseBooleanArray sba = listView.getCheckedItemPositions();
+                        for (int i = 0; i < listView.getCount(); i++) {
+                            if (sba.get(i)) {
+                                Item item = model.getHistoryList().getValue().get(i);
+                                model.delete(item);
+                            }
+                        }
                     })
                     .setNegativeButton(android.R.string.no, null).show();
         });
 
         listView.setOnItemClickListener((parent, view12, position, id) -> {
-            int selectedCount = listView.getCheckedItemCount();
-            selectedToShoppingButton.setEnabled((selectedCount > 0));
-            deleteSelectedButton.setEnabled((selectedCount > 0));
+            updateButtons();
 
         });
         deleteAllButton = view.findViewById(R.id.deleteAllButton);
         deleteAllButton.setOnClickListener((v) -> {
-            new AlertDialog.Builder(activity)
-                    .setTitle("Delete ALL items")
-                    .setMessage("Really delete ALL items?")
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.delete_all_dialog_title)
+                    .setMessage(R.string.delete_all_dialog_message)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
                         selectedToShoppingButton.setEnabled(false);
                         deleteSelectedButton.setEnabled(false);
-                        activity.deleteAllItems();
-                        Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
+                        model.deleteAll();
 
                     })
                     .setNegativeButton(android.R.string.no, null).show();
@@ -130,30 +133,43 @@ public class HistoryFragment extends Fragment implements Observer {
         return view;
     }
 
-
-    private String getNameFromCursorAt(int position) {
-        SQLiteCursor cursor = (SQLiteCursor) listView.getItemAtPosition(position);
-        int columnIndex = cursor.getColumnIndex("name");
-        return cursor.getString(columnIndex);
-    }
-
-    private List<ContentValues> getCheckedValues() {
-        SparseBooleanArray sba = listView.getCheckedItemPositions();
-        List<ContentValues> selected = new ArrayList<>();
-        for (int i = 0; i < listView.getCount(); i++) {
-            if (sba.get(i)) {
-                ContentValues values = new ContentValues();
-                values.put("name", getNameFromCursorAt(i));
-                values.put("archived", 0);
-                selected.add(values);
-                listView.setItemChecked(i, false);
-            }
-        }
-        return selected;
+    private void updateButtons() {
+        int selectedCount = listView.getCheckedItemCount();
+        selectedToShoppingButton.setEnabled((selectedCount > 0));
+        deleteSelectedButton.setEnabled((selectedCount > 0));
     }
 
     @Override
-    public void update(Observable o, Object arg) {
-        listView.setAdapter(activity.getCursorAdapter(1));
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        model = ViewModelProviders.of(this).get(ItemViewModel.class);
+        model.getHistoryList().observe(this, items -> {
+            ArrayAdapter<Item> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_multiple_choice, items);
+            listView.setAdapter(adapter);
+            if (savedInstanceState != null) {
+                List<Integer> selected = savedInstanceState.getIntegerArrayList("selected");
+                savedInstanceState.clear();
+                if ((selected != null) && (selected.size() > 0)) {
+                    for (Integer i : selected) {
+                        listView.setItemChecked(i, true);
+                    }
+                }
+            }
+            updateButtons();
+        });
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < listView.getCount(); i++) {
+            if (listView.isItemChecked(i)) {
+                list.add(i);
+                listView.setItemChecked(i, false);
+            }
+        }
+        outState.putIntegerArrayList("selected", (ArrayList<Integer>) list);
+
     }
 }

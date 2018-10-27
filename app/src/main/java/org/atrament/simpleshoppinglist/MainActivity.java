@@ -24,32 +24,18 @@
 
 package org.atrament.simpleshoppinglist;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.widget.CursorAdapter;
-import android.widget.SimpleCursorAdapter;
-
-import com.facebook.stetho.Stetho;
-
-import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
 
 
-    private DbHelper dbHelper;
-    private Pager pagerAdapter;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Stetho.initializeWithDefaults(this); //TODO remove Stetho from final version
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -58,9 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabs = findViewById(R.id.tabs);
 
-
         ViewPager pagerView = findViewById(R.id.pager);
-        pagerAdapter = new Pager(getSupportFragmentManager(), tabs.getTabCount());
+        Pager pagerAdapter = new Pager(getSupportFragmentManager(), tabs.getTabCount());
         pagerView.setAdapter(pagerAdapter);
 
         pagerView.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabs));
@@ -72,105 +57,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
             }
         });
-
     }
 
-    public void storeValues(ContentValues values) {
-        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
-            int result = (int) db.insertWithOnConflict("items", null, values, SQLiteDatabase.CONFLICT_IGNORE);
-            if (result == -1) {
-                db.update("items", values, "name=?", new String[]{values.getAsString("name")});
-            }
-        }
-        pagerAdapter.updatePages();
-    }
-
-    public void storeValues(List<ContentValues> values) {
-        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
-            try {
-                db.beginTransaction();
-                for (ContentValues v : values) {
-                    int result = (int) db.insertWithOnConflict("items", null, v, SQLiteDatabase.CONFLICT_IGNORE);
-                    if (result == -1) {
-                        db.update("items", v, "name=?", new String[]{v.getAsString("name")});
-                    }
-                }
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
-            }
-        }
-        pagerAdapter.updatePages();
-
-    }
-
-    public SimpleCursorAdapter getCursorAdapter(int archived) {
-        SimpleCursorAdapter result;
-        SQLiteDatabase db = getDbHelper().getReadableDatabase();
-        Cursor cursor = db.query("items",
-                new String[]{"_id", "name", "archived"},
-                "archived=?",
-                new String[]{Integer.toString(archived)}, null, null, "name ASC");
-        result = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_multiple_choice,
-                cursor, new String[]{"name"},
-                new int[]{android.R.id.text1},
-                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        return result;
-    }
-
-    public SimpleCursorAdapter getHintCursorAdapter() {
-        SimpleCursorAdapter result;
-        SQLiteDatabase db = getDbHelper().getReadableDatabase();
-        Cursor cursor = db.query("items",
-                new String[]{"_id", "name"},
-                "archived=?",
-                new String[]{Integer.toString(1)}, null, null, "name ASC");
-        result = new SimpleCursorAdapter(this,
-                android.R.layout.simple_list_item_1,
-                cursor, new String[]{"name"},
-                new int[]{android.R.id.text1},
-                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        return result;
-    }
-
-    public void deleteItems(List<ContentValues> values) {
-        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
-            try {
-                db.beginTransaction();
-                for (ContentValues v : values) {
-                    db.delete("items", "name=?", new String[]{v.getAsString("name")});
-                }
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
-            }
-
-        }
-        pagerAdapter.updatePages();
-    }
-
-    public void deleteAllItems() {
-        try (SQLiteDatabase db = getDbHelper().getWritableDatabase()) {
-            db.execSQL("delete from " + "items");
-        }
-        pagerAdapter.updatePages();
-    }
-
-    public DbHelper getDbHelper() {
-        if (dbHelper == null) {
-            dbHelper = new DbHelper(this);
-            return dbHelper;
-        } else {
-            return dbHelper;
-        }
-    }
 }

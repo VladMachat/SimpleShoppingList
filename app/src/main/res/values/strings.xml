@@ -33,6 +33,11 @@
     <string name="selected_to_history_list">Selected to history list</string>
     <string name="delete_selected">Delete selected</string>
     <string name="delete_all">Delete all</string>
+    <string name="delete_dialog_title">Delete items</string>
+    <string name="delete_dialog_message">Really delete selected items?</string>
+    <string name="delete_all_dialog_title">Delete ALL items</string>
+    <string name="delete_all_dialog_message">Really delete ALL items?</string>
+    <string name="enter_item_hint">Enter new item</string>
 
 
 </resources>

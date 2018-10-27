@@ -24,29 +24,49 @@
 
 package org.atrament.simpleshoppinglist;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 
-class DbHelper extends SQLiteOpenHelper {
+@Entity(tableName = "items")
+public class Item {
 
-    private static final String DB_NAME = "shoppinglist";
-    private static final int DB_VERSION = 1;
+    @PrimaryKey(autoGenerate = true)
+    private int id;
 
-    public DbHelper(Context context) {
-        super(context, DB_NAME, null, DB_VERSION);
+    private String name;
+    private Boolean archived;
+
+    public Item(String name, Boolean archived) {
+        this.name = name;
+        this.archived = archived;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Boolean getArchived() {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived) {
+        this.archived = archived;
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL("drop table if exists items");
-        db.execSQL("create table if not exists items ( _id integer primary key autoincrement, name text unique, archived integer);");
-
+    public String toString() {
+        return name;
     }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-    }
-
 }

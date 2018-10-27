@@ -32,12 +32,14 @@
 
     <AutoCompleteTextView
         android:id="@+id/textView"
+        android:inputType="textCapSentences"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:maxLines="1"
         android:singleLine="true"
         android:completionThreshold="1"
         android:textSize="14.0sp"
+        android:hint="@string/enter_item_hint"
         app:layout_constraintBottom_toTopOf="@+id/shoppingList"
         app:layout_constraintEnd_toStartOf="@+id/addButton"
         app:layout_constraintStart_toStartOf="parent"

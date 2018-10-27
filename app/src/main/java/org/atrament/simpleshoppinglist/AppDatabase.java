@@ -24,42 +24,30 @@
 
 package org.atrament.simpleshoppinglist;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.arch.persistence.room.Database;
+import android.arch.persistence.room.Room;
+import android.arch.persistence.room.RoomDatabase;
+import android.content.Context;
 
-import java.util.ArrayList;
-import java.util.List;
 
-class Pager extends FragmentStatePagerAdapter {
+@Database(entities = {Item.class}, version = 1, exportSchema = false)
+public abstract class AppDatabase extends RoomDatabase {
 
-    private final int numOfTabs;
-    private final List<Fragment> pages;
+    private static AppDatabase INSTANCE;
 
-    public Pager(FragmentManager fm, int numOfTabs) {
-        super(fm);
-        this.numOfTabs = numOfTabs;
-        pages = new ArrayList<>();
-        pages.add(new ShoppingFragment());
-        pages.add(new HistoryFragment());
-    }
-
-    @Override
-    public Fragment getItem(int position) {
-        switch (position) {
-            case 0:
-                return pages.get(0);
-            case 1:
-                return pages.get(1);
+    public static AppDatabase getDatabase(final Context context) {
+        if (INSTANCE == null) {
+            synchronized (AppDatabase.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), AppDatabase.class, "itemsDB").build();
+                }
+            }
         }
+        return INSTANCE;
 
-        return null;
     }
 
-    @Override
-    public int getCount() {
-        return numOfTabs;
-    }
 
+    public abstract ItemDao itemDao();
 
 }
